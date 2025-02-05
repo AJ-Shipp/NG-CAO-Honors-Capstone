@@ -6,9 +6,8 @@ from astropy.io import fits
 def files_in(directory, brights_reg_exp, darks_reg_exp, m, buff1=0, buff2=None, ceil=2**16-1, flats_reg_exp=None, fdarks_reg_exp=None, remake=True):
     '''For a given directory containing hologram data and darks with
     filenames with regular expressions, this function extracts the data from
-    the .fits files, finds the nominal center of the sa2turated 0th-order PSF,
+    the .fits files, finds the nominal center of the saturated 0th-order PSF,
     and gets the average dark-subtracted bright frame.
-
     The returns get saved as FITS file if that FITS file doesn't already
     exist.  If it does, then that file is simply loaded via this function.
 
@@ -145,7 +144,8 @@ def files_in(directory, brights_reg_exp, darks_reg_exp, m, buff1=0, buff2=None, 
                 lights.append(df)
             if darks_reg_exp is not None:
                 if darks_reg_exp in f:
-                    d = (fits.getdata(f)).astype(float)#[0] # [0] if older CIS120 testbed
+                    d = (fits.getdata(f)).astype(float)[0] # [0] if older CIS120 testbed
+                    d = d.reshape((1944,2592))
                     darks.append(d) # to convert from unsigned integer uint16
             if flats_reg_exp is not None:
                 if flats_reg_exp in f:
