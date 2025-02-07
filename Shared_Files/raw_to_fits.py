@@ -4,7 +4,7 @@ import os
 
 if __name__ == '__main__':
 
-    filename = r"C:\Users\antho\Videos\NG\Testing_1-17\NewAlightment_2kET.raw"
+    filename = r"C:\Users\antho\Videos\NG\Testing_2-7\test1_1d7ND.raw"
     # "C:\Users\antho\Videos\NG\PSF_Characterization\p_0-0\pos_ZeroZero-0.Raw"
 
     for j in range(0,30):
