@@ -144,7 +144,7 @@ def files_in(directory, brights_reg_exp, darks_reg_exp, m, buff1=0, buff2=None, 
                 lights.append(df)
             if darks_reg_exp is not None:
                 if darks_reg_exp in f:
-                    d = (fits.getdata(f)).astype(float)[0] # [0] if older CIS120 testbed
+                    d = (fits.getdata(f)).astype(float) # [0] if older CIS120 testbed
                     d = d.reshape((1944,2592))
                     darks.append(d) # to convert from unsigned integer uint16
             if flats_reg_exp is not None:
