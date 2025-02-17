@@ -3,22 +3,22 @@ import FGCentroid as fg
 import numpy as np
 from astropy.io import fits
 
-whichFile = 1
-fldFile = r'C:\Users\antho\Videos\NG\PSF_Characterization\All'
-fldBright = 'bright-pos_ZeropThree'
-fldDark = 'dark-01022025'
-fgFile = r"C:\Users\antho\Videos\NG\PSF_Characterization\All\avg_lights_sub_-pos_ZeroZero.fits"
-fgArray = fits.getdata(fgFile)
-M = fgArray[1005:1013,1321:1329]
+whichFile = 0
+fldFile = r"C:\Users\antho\Videos\NG\Testing_2-10\PSFdata_ff\ff_all"
+fldBright = 'bright_0-0'
+fldDark = 'dark_0-0'
+# fgFile = r"C:\Users\antho\Videos\NG\PSF_Characterization\All\avg_lights_sub_-pos_ZeroZero.fits"
+# # fgArray = fits.getdata(fgFile)
+# # M = fgArray[1005:1013,1321:1329]
 
 if whichFile == 0:
     returns = fld.files_in(fldFile,fldBright,fldDark,4)
 elif whichFile == 1:
     returns = 'Testing'
 
-print(returns)
+# print(returns)
 
-fg.FGCentroid2(M,pkRow=1009,pkCol=1324,Ncentr=1013-1005,Method='Gaussian',SNRthresh=1)
+# fg.FGCentroid2(M,pkRow=1009,pkCol=1324,Ncentr=1013-1005,Method='Gaussian',SNRthresh=1)
 '''Takes into account corrected pixel positions for x and y (not z).
     in main.py:
     array = fits.getdata(filepath for avg file)
