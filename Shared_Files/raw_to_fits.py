@@ -6,7 +6,7 @@ transform = 2
 
 if __name__ == '__main__':
 
-    filename = r"C:\Users\antho\Videos\NG\Testing_2-10\PSFdata_ff\ff_all\dark_0-0_-0210202510"
+    filename = r"C:\Users\antho\Videos\NG\Testing_2-10\PSFdata_2x2b\2x2_all\dark_0-0_-02102025"
 
     if transform == 0:
         for i in range(0,999999):
@@ -37,7 +37,7 @@ if __name__ == '__main__':
                 hdu.writeto(fits_file, overwrite=True)
 
     if transform == 2:
-        for i in range(0,9999):
+        for i in range(0,999999):
             raw_file1 = filename + str(i) + '-'
             for j in range(0,40):
                 raw_file2 = raw_file1 + str(j) + '.Raw'
