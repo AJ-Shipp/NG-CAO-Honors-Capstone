@@ -2,15 +2,15 @@ from astropy.io import fits
 import numpy as np
 import os
 
-transform = 2
+transform = 1
 
 if __name__ == '__main__':
 
-    filename = r"C:\Users\antho\Videos\NG\Testing_2-10\PSFdata_2x2b\2x2_all\dark_0-0_-02102025"
+    filename = r"C:\Users\antho\Videos\NG\Testing_2-21\oa_ff_posY_nb--02212025152320-"
 
     if transform == 0:
-        for i in range(0,999999):
-            raw_file1 = filename + str(i)
+        for i in range(0,9999):
+            raw_file1 = filename #+ str(i)
             for j in range(0,99): 
                 raw_file1 = raw_file1 + '-' + str(j) + '.raw'
 
@@ -25,26 +25,26 @@ if __name__ == '__main__':
 
     if transform == 1:
         for j in range(0,40):
-            raw_file1 = filename #+ str(j) + '.Raw'
+            raw_file1 = filename + str(j) + '.Raw'
 
             if os.path.isfile(raw_file1):
                 raw_imarray = np.fromfile(raw_file1, dtype='int16')
-                reshaped_raw_imarray = np.reshape(raw_imarray, (1944,2592,2))
+                reshaped_raw_imarray = np.reshape(raw_imarray, (1944,2592))
                 fits_file = raw_file1.split('.')[0]+'.fits'
-                hdu = fits.ImageHDU(reshaped_raw_imarray[:,:,0])
+                hdu = fits.ImageHDU(reshaped_raw_imarray)
                 prim = fits.PrimaryHDU()
                 hdul = fits.HDUList([prim,hdu])
                 hdu.writeto(fits_file, overwrite=True)
 
     if transform == 2:
-        for i in range(0,999999):
+        for i in range(0,9999):
             raw_file1 = filename + str(i) + '-'
             for j in range(0,40):
                 raw_file2 = raw_file1 + str(j) + '.Raw'
 
                 if os.path.isfile(raw_file2):
                     raw_imarray = np.fromfile(raw_file2, dtype='int16')
-                    reshaped_raw_imarray = np.reshape(raw_imarray, (1944,2592,2))
+                    reshaped_raw_imarray = np.reshape(raw_imarray, (int(1944/2 - 12),int(2592/2),2))
                     fits_file = raw_file2.split('.')[0]+'.fits'
                     hdu = fits.ImageHDU(reshaped_raw_imarray[:,:,0])
                     prim = fits.PrimaryHDU()
