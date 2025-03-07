@@ -942,16 +942,16 @@ def FGCentroid2(M, pkRow, pkCol, Ncentr, Method, SNRthresh, sigmax_avg=None, sig
 
     nr = len(M)
     nc = len(M[0])
-    rowMin = max(0, pkRow - math.floor(Ncentr/2))
-    rowMax = min(nr-1, pkRow + math.floor(Ncentr/2))
-    colMin = max(0, pkCol - math.floor(Ncentr/2))
-    colMax = min(nc-1, pkCol + math.floor(Ncentr/2))
+    rowMin = min(0, pkRow - math.floor(Ncentr/2))
+    rowMax = max(nr-1, pkRow + math.floor(Ncentr/2))
+    colMin = min(0, pkCol - math.floor(Ncentr/2))
+    colMax = max(nc-1, pkCol + math.floor(Ncentr/2))
     rowInds = list(np.arange(rowMin, rowMax+1))
     colInds = list(np.arange(colMin, colMax+1))
     # rowInds = [i for i in range(rowMin, rowMax + 1)]
     # colInds = [i for i in range(colMin, colMax + 1)]
 
-    image = M[rowMin:rowMax+1, colMin:colMax+1]
+    image = M[rowMin:rowMax, colMin:colMax]
     # image = []
     # for r in range(rowMin, rowMax+1):
     #     temp = []
