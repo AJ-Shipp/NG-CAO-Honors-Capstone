@@ -2,29 +2,73 @@ import field_distortion_read_in_files as fld
 import FGCentroid as fg
 import numpy as np
 from astropy.io import fits
+import os
+import math
+import matplotlib.pyplot as plt
+import matplotlib.animation as an
+from celluloid import Camera as cam
 
-whichFile = 0
-fldFile = r"C:\Users\antho\Videos\NG\Testing_2-10\PSFdata_ff\ff_all"
-fldBright = 'bright_0-0'
-fldDark = 'dark_0-0'
-# fgFile = r"C:\Users\antho\Videos\NG\PSF_Characterization\All\avg_lights_sub_-pos_ZeroZero.fits"
-# # fgArray = fits.getdata(fgFile)
-# # M = fgArray[1005:1013,1321:1329]
+def averageComparisons(directory,in1a,in1b,in2a,in2b,in3a,in3b,in4a,in4b):
+    names = [in1a,in1b,in2a,in2b,in3a,in3b,in4a,in4b]
+    avgs = [0,0,0,0,0,0,0,0]
+    filesFits = []
+    fitsNames = []
+    setUsed = []
+    currAvg = 0
+
+    for files in os.listdir(directory):
+        if files.endswith('.fits'):
+            filesFits.append(files)
+
+    for h in range(0,len(filesFits)):
+        fitsNames.append(directory + '\\' + filesFits[h])
+
+    for i in range(0,len(names)):
+        for j in range(0,len(fitsNames)):
+            if str(names[i]) in fitsNames[j]:
+                setUsed.append(fitsNames[j])
+    
+        for k in range(0,len(setUsed)):
+            currAvg = currAvg + np.sum(fits.open(setUsed[k])[1].data)/(1944*2592)
+        if len(setUsed) != 0:
+            currAvg = currAvg/len(setUsed)
+        avgs[i] = currAvg
+
+        setUsed = []
+        currAvg = 0
+    
+    return names,avgs
+
+whichFile = 3
+"""
+whichFile Choices and Functionalities
+
+0: Bright Files Averaging
+1: Fast Gaussian PSF Fitting
+2: Dark Frame Off-Axis Averaging Over Full Image
+3: Centroid Stability Analysis & Animation
+"""
+
 
 if whichFile == 0:
+    fldFile = r"C:\Users\antho\Videos\NG\Testing_2-10\PSFdata_ff\ff_all"
+    fldBright = 'bright_0-0'
+    fldDark = 'dark_0-0'
     returns = fld.files_in(fldFile,fldBright,fldDark,4)
+    print(returns)
 elif whichFile == 1:
-    returns = 'Testing'
-
-# print(returns)
-
-# fg.FGCentroid2(M,pkRow=1009,pkCol=1324,Ncentr=1013-1005,Method='Gaussian',SNRthresh=1)
-'''Takes into account corrected pixel positions for x and y (not z).
+    fgFile = r"C:\Users\antho\Videos\NG\Testing_2-10\PSFdata_2x2b\2x2_all\avg_lights_sub__0-p5.fits"
+    fgArray = fits.getdata(fgFile)
+    centerGuess = [168,616]             # ex. = [1119,1320]  <-backwards from 'SAOimage DS9' viewer
+    spotSize = 5
+    M1 = fgArray[(centerGuess[0]-spotSize):(centerGuess[0]+spotSize),(centerGuess[1]-spotSize):(centerGuess[1]+spotSize)]
+    # - # - # - # - # - # - # - # - # - # - # 
+    
+    centroid = fg.FGCentroid2(M=M1,pkRow=centerGuess[1],pkCol=centerGuess[0],Ncentr=(centerGuess[0]-centerGuess[0]),Method='Gaussian',SNRthresh=1)
+    '''Takes into account corrected pixel positions for x and y (not z).
     in main.py:
     array = fits.getdata(filepath for avg file)
-    M = array[row_start:row_end, col_start: col_end]
-    To select region b/w 2-sigma and 3-sigma:  
-
+    M1 = array[row_start:row_end, col_start: col_end]
     
     pix_corr_x -> Make np.zeros((1944,2592))
     pix_corr_y -> Make np.zeros((1944,2592))
@@ -33,5 +77,147 @@ elif whichFile == 1:
     Ncentr -> row_end - row_start
     Method -> "RotGaussian"
     SNRthresh, bright_x, bright_y -> 1 for all of them
-    
     '''
+
+    print(
+        "\nFast Gaussian Centroiding Results \n" 
+        "\n" 
+        "Row of centroid:                        {:.4f} \n" 
+        "Column of centroid:                     {:.4f} \n" 
+        "Gaussian Amplitude:                     {:.4f} \n" 
+        "Gaussian Sigma:                         {:.4f} \n" 
+        "Gaussian Standard Deviation (x,y):     ({:.4f},{:.4f}) \n" 
+        "Offset:                                 {:.4f} \n" 
+        "Centroid Calculation (x,y):            ({:.4f},{:.4f}) \n" 
+        "Centroid Calculation Adjusted (x,y):   ({:.4f},{:.4f}) \n" 
+        "Brightest Pixel (x,y):                 ({:.4f},{:.4f}) \n" 
+        .format(centroid['row'],centroid['col'],centroid['GauAmp'],centroid['GauSig'],centroid['GauSigx'],
+                centroid['GauSigy'],centroid['offset'],centroid['x'],centroid['y'],centroid['x']+centerGuess[0]-spotSize,
+                centroid['y']+centerGuess[1]-spotSize,centerGuess[0],centerGuess[1])
+        )
+
+    t = np.linspace(0.0,2.0*np.pi,100)
+    x = (centroid['GauSigx'])*np.cos(t)
+    y = (centroid['GauSigy'])*np.sin(t)
+
+    plt.subplot(231)
+    plt.imshow(np.reshape(np.round(centroid['GauImg'],1),(2*spotSize,2*spotSize)))
+    plt.plot(x+centroid['x'],y+centroid['y'],'xkcd:bright teal',label=r'1$\sigma$')
+    plt.plot(2*x+centroid['x'],2*y+centroid['y'],'xkcd:fluorescent green',label=r'2$\sigma$')
+    plt.plot(3*x+centroid['x'],3*y+centroid['y'],'xkcd:orangered',label=r'3$\sigma$')
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    # plt.axis('equal')
+    plt.legend()
+    plt.title('Fast Gaussian Fitted PSF')
+    plt.subplot(232)
+    plt.imshow(np.reshape(np.round(centroid['GauImg'],1),(2*spotSize,2*spotSize)) - M1,aspect=1)
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.title('Original Minus Fitted')
+    plt.subplot(233)
+    plt.imshow(M1)
+    plt.gca().invert_yaxis()
+    plt.title('Original Image')
+    plt.colorbar()
+    plt.subplot(234)
+    plt.imshow(np.reshape(np.round(centroid['GauImg'],1),(2*spotSize,2*spotSize)))
+    plt.fill(x+centroid['x'],y+centroid['y'],'xkcd:bright teal',label=r'1$\sigma$')
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.legend()
+    plt.title('1 Standard Deviation')
+    plt.subplot(235)
+    plt.imshow(np.reshape(np.round(centroid['GauImg'],1),(2*spotSize,2*spotSize)))
+    plt.fill(2*x+centroid['x'],2*y+centroid['y'],'xkcd:fluorescent green',label=r'2$\sigma$')
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.legend()
+    plt.title('2 Standard Deviations')
+    plt.subplot(236)
+    plt.imshow(np.reshape(np.round(centroid['GauImg'],1),(2*spotSize,2*spotSize)))
+    plt.fill(3*x+centroid['x'],3*y+centroid['y'],'xkcd:orangered',label=r'3$\sigma$')
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.legend()
+    plt.title('3 Standard Deviations')
+    plt.show()
+elif whichFile == 2:
+    named,averages = averageComparisons(r'C:\Users\antho\Videos\NG\Testing_2-21',
+                                        'posP_nb','posP_bPLA','posY_nb','posY_bPLA',
+                                        'negP_nb','negP_bPLA','negY_nb','negY_bPLA')
+    for i in range(0,len(averages)):
+        print('Value for: %s is %f'%(named[i],averages[i]))
+elif whichFile == 3:
+    csaFilePath = r"C:\Users\antho\Videos\NG\Testing_2-10\PSFdata_ff\ff_all"+"\\"
+    images = []
+    subImages = []
+    centroids = []
+    imgBrightSpot = [1119,1320]
+    csaSpotSize = 6
+    csaSumX = 0
+    csaSumY = 0
+    csaAvgX = 0
+    csaAvgY = 0
+
+    for filename in os.listdir(csaFilePath):
+        if not filename.endswith('.fits'):
+            continue
+        if 'bright_0-0_-02' in filename:
+            fFile = fits.getdata(csaFilePath + filename)
+            images.append(fFile)
+
+    for j in range(0,len(images)):
+        M2 = images[j][(imgBrightSpot[0]-csaSpotSize):(imgBrightSpot[0]+csaSpotSize),
+                       (imgBrightSpot[1]-csaSpotSize):(imgBrightSpot[1]+csaSpotSize)]
+        centroids.append(fg.FGCentroid2(M=M2,pkRow=imgBrightSpot[1],pkCol=imgBrightSpot[0],
+                                        Ncentr=(imgBrightSpot[0]-imgBrightSpot[0]),Method='Gaussian',SNRthresh=1))
+        subImages.append(M2)
+        
+    # for k in range(0,len(centroids)):
+    #     print('Centroid Calculation Adjusted (x,y):    ({:.4f},{:.4f})'
+    #           .format((centroids[k]['x']+imgBrightSpot[0]-csaSpotSize),(centroids[k]['y']+imgBrightSpot[1]-csaSpotSize)))
+        
+    for w in range(0,len(centroids)):
+        csaSumX = csaSumX + (centroids[w]['x']+imgBrightSpot[0]-csaSpotSize)
+        csaSumY = csaSumY + (centroids[w]['y']+imgBrightSpot[1]-csaSpotSize)
+
+    csaAvgX = csaSumX / len(centroids)
+    csaAvgY = csaSumY / len(centroids)
+
+    maxDist = float()
+    minX = float()
+    minY = float()
+    maxX = float()
+    maxY = float()
+    for i in range(0,len(centroids)):
+        dist = (np.sqrt(((centroids[i]['x']+imgBrightSpot[0]-csaSpotSize)-(csaAvgX))**2+((centroids[i]['y']+imgBrightSpot[1]-csaSpotSize)-(csaAvgY))**2))
+        if dist > maxDist:
+            maxDist = dist
+            maxX = (centroids[i]['x']+imgBrightSpot[0]-csaSpotSize)
+            maxY = (centroids[i]['y']+imgBrightSpot[1]-csaSpotSize)
+
+    print(
+        "Max Distance of: {:.4f}\n"
+        "Max x-Distance of: {:.2f}\n"
+        "Max y-Distance of: {:.2f}\n"
+        .format(maxDist,maxX,maxY)
+        )
+
+    fig, ax = plt.subplots()
+    ims = []
+    camera = cam(fig)
+
+    for p in range(0,len(subImages)):
+        im = ax.imshow(subImages[p], animated=True)
+        camera.snap()
+        if p == 0:
+            ax.imshow(subImages[p])
+        ims.append([im])
+
+    ani = an.ArtistAnimation(fig, ims, interval=200, repeat_delay=0)
+    # animation = camera.animate()
+    # animation.save(r'C:\Users\antho\Videos\NG\CDR\ff_0-0_csa.gif')        #Saves the animation
+    plt.show()
+else:
+    print('Please choose a valid input,',whichFile,'is not a possible choice.')
