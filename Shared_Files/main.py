@@ -39,21 +39,22 @@ def averageComparisons(directory,in1a,in1b,in2a,in2b,in3a,in3b,in4a,in4b):
     
     return names,avgs
 
-whichFile = 3
+whichFile = 0
 """
-whichFile Choices and Functionalities
+whichFile's Choices and their Functionalities
 
 0: Bright Files Averaging
 1: Fast Gaussian PSF Fitting
 2: Dark Frame Off-Axis Averaging Over Full Image
 3: Centroid Stability Analysis & Animation
+4: Converts all .Raw files in a folder to .fits files
 """
 
 
 if whichFile == 0:
-    fldFile = r"C:\Users\antho\Videos\NG\Testing_2-10\PSFdata_ff\ff_all"
-    fldBright = 'bright_0-0'
-    fldDark = 'dark_0-0'
+    fldFile = r"C:\Users\antho\Videos\NG\Testing_4-4\Off-Axis_Images"
+    fldBright = 'bright_negY_bNA_lightOn_edgeVis-'
+    fldDark = 'dark_negP_bCF_lightOff_edgeOff-'
     returns = fld.files_in(fldFile,fldBright,fldDark,4)
     print(returns)
 elif whichFile == 1:
@@ -219,5 +220,29 @@ elif whichFile == 3:
     # animation = camera.animate()
     # animation.save(r'C:\Users\antho\Videos\NG\CDR\ff_0-0_csa.gif')        #Saves the animation
     plt.show()
+elif whichFile == 4:
+    direct = r"C:\Users\antho\Videos\NG\Testing_4-4\Off-Axis_Images"
+    for filename in os.listdir(direct):
+        filepath = direct + "\\" + filename
+        if not filepath.endswith(".Raw"):
+            continue
+        if os.path.isfile(filepath):
+            raw_imarray = np.fromfile(filepath, dtype='uint16')
+            reshaped_raw_imarray = np.reshape(raw_imarray, (1944,2592))
+            fits_file = filepath.split('.')[0]+'.fits'
+            hypSplit = fits_file.split('-')
+            fits_file = hypSplit[0] + "-" + hypSplit[1] + "-" + hypSplit[2] + "-" + hypSplit[4]
+            if len(fits_file.split("On")) == 1:
+                direcSplt = fits_file.split("Images\\")
+                fits_file = direcSplt[0] + "Images\\" + "dark_" + direcSplt[1] 
+            else:
+                direcSplt = fits_file.split("Images\\")
+                fits_file = direcSplt[0] + "Images\\" + "bright_" + direcSplt[1] 
+
+            hdu = fits.ImageHDU(reshaped_raw_imarray)
+            prim = fits.PrimaryHDU()
+            hdul = fits.HDUList([prim,hdu])
+            hdu.writeto(fits_file, overwrite=True)
+    print("\nAll .raw images converted to .fits\n")
 else:
     print('Please choose a valid input,',whichFile,'is not a possible choice.')
