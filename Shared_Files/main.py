@@ -47,24 +47,35 @@ whichFile's Choices and their Functionalities
 1: Fast Gaussian PSF Fitting
 2: Dark Frame Off-Axis Averaging Over Full Image
 3: Centroid Stability Analysis & Animation
-4: Converts all .Raw files in a folder to .fits files
+4: Converts all .Raw files in a folder to .fits files for full frame images
+5: Converts all .Raw files in a folder to .fits files for 2x2 binned images
 """
-
-
 if whichFile == 0:
+    """
+    User-defined variables
+    """
     fldFile = r"C:\Users\antho\Videos\NG\Testing_4-4\Off-Axis_Images"
     fldBright = 'bright_negY_bNA_lightOn_edgeVis-'
     fldDark = 'dark_negP_bCF_lightOff_edgeOff-'
+    
+    """
+    Program code, do not edit.
+    """
     returns = fld.files_in(fldFile,fldBright,fldDark,4)
     print(returns)
 elif whichFile == 1:
+    """
+    User-defined variables.
+    """
     fgFile = r"C:\Users\antho\Videos\NG\Testing_2-10\PSFdata_2x2b\2x2_all\avg_lights_sub__0-p5.fits"
     fgArray = fits.getdata(fgFile)
     centerGuess = [168,616]             # ex. = [1119,1320]  <-backwards from 'SAOimage DS9' viewer
     spotSize = 5
     M1 = fgArray[(centerGuess[0]-spotSize):(centerGuess[0]+spotSize),(centerGuess[1]-spotSize):(centerGuess[1]+spotSize)]
-    # - # - # - # - # - # - # - # - # - # - # 
     
+    """
+    Program code, do not edit.
+    """
     centroid = fg.FGCentroid2(M=M1,pkRow=centerGuess[1],pkCol=centerGuess[0],Ncentr=(centerGuess[0]-centerGuess[0]),Method='Gaussian',SNRthresh=1)
     '''Takes into account corrected pixel positions for x and y (not z).
     in main.py:
@@ -144,23 +155,35 @@ elif whichFile == 1:
     plt.title('3 Standard Deviations')
     plt.show()
 elif whichFile == 2:
-    named,averages = averageComparisons(r'C:\Users\antho\Videos\NG\Testing_2-21',
+    filePath = r'C:\Users\antho\Videos\NG\Testing_2-21'
+    
+    named,averages = averageComparisons(filePath,
                                         'posP_nb','posP_bPLA','posY_nb','posY_bPLA',
                                         'negP_nb','negP_bPLA','negY_nb','negY_bPLA')
     for i in range(0,len(averages)):
         print('Value for: %s is %f'%(named[i],averages[i]))
 elif whichFile == 3:
-    csaFilePath = r"C:\Users\antho\Videos\NG\Testing_2-10\PSFdata_ff\ff_all"+"\\"
+    """
+    User-defined variables
+    """
+    csaPath = r"C:\Users\antho\Videos\NG\Testing_2-10\PSFdata_ff\ff_all"
+    imgBrightSpot = [1119,1320]
+    csaSpotSize = 6
+    saveAnimation = False
+    animationName = 'ff_0-0_csa.gif'
+
+    """
+    Variables/code used by the program, do not edit. 
+    """
     images = []
     subImages = []
     centroids = []
-    imgBrightSpot = [1119,1320]
-    csaSpotSize = 6
     csaSumX = 0
     csaSumY = 0
     csaAvgX = 0
     csaAvgY = 0
 
+    csaFilePath = csaPath + +"\\"
     for filename in os.listdir(csaFilePath):
         if not filename.endswith('.fits'):
             continue
@@ -174,11 +197,7 @@ elif whichFile == 3:
         centroids.append(fg.FGCentroid2(M=M2,pkRow=imgBrightSpot[1],pkCol=imgBrightSpot[0],
                                         Ncentr=(imgBrightSpot[0]-imgBrightSpot[0]),Method='Gaussian',SNRthresh=1))
         subImages.append(M2)
-        
-    # for k in range(0,len(centroids)):
-    #     print('Centroid Calculation Adjusted (x,y):    ({:.4f},{:.4f})'
-    #           .format((centroids[k]['x']+imgBrightSpot[0]-csaSpotSize),(centroids[k]['y']+imgBrightSpot[1]-csaSpotSize)))
-        
+
     for w in range(0,len(centroids)):
         csaSumX = csaSumX + (centroids[w]['x']+imgBrightSpot[0]-csaSpotSize)
         csaSumY = csaSumY + (centroids[w]['y']+imgBrightSpot[1]-csaSpotSize)
@@ -217,11 +236,19 @@ elif whichFile == 3:
         ims.append([im])
 
     ani = an.ArtistAnimation(fig, ims, interval=200, repeat_delay=0)
-    # animation = camera.animate()
-    # animation.save(r'C:\Users\antho\Videos\NG\CDR\ff_0-0_csa.gif')        #Saves the animation
+    if saveAnimation == True:
+        animation = camera.animate()
+        animation.save(csaFilePath+animationName)
     plt.show()
 elif whichFile == 4:
+    """
+    User-defined variable
+    """
     direct = r"C:\Users\antho\Videos\NG\Testing_4-4\Off-Axis_Images"
+    
+    """
+    Program code, do not edit.
+    """
     for filename in os.listdir(direct):
         filepath = direct + "\\" + filename
         if not filepath.endswith(".Raw"):
@@ -230,6 +257,11 @@ elif whichFile == 4:
             raw_imarray = np.fromfile(filepath, dtype='uint16')
             reshaped_raw_imarray = np.reshape(raw_imarray, (1944,2592))
             fits_file = filepath.split('.')[0]+'.fits'
+
+            """
+            The following code segment is used to adjust the filenames of the output converted .fits files
+            - Can be removed/changed as needed for different naming schemes 
+            """
             hypSplit = fits_file.split('-')
             fits_file = hypSplit[0] + "-" + hypSplit[1] + "-" + hypSplit[2] + "-" + hypSplit[4]
             if len(fits_file.split("On")) == 1:
@@ -238,6 +270,48 @@ elif whichFile == 4:
             else:
                 direcSplt = fits_file.split("Images\\")
                 fits_file = direcSplt[0] + "Images\\" + "bright_" + direcSplt[1] 
+            """
+            -- End of segment
+            """
+
+            hdu = fits.ImageHDU(reshaped_raw_imarray)
+            prim = fits.PrimaryHDU()
+            hdul = fits.HDUList([prim,hdu])
+            hdu.writeto(fits_file, overwrite=True)
+    print("\nAll .raw images converted to .fits\n")
+elif whichFile == 5:
+    """
+    User-defined variable.
+    """
+    direct = r"C:\Users\antho\Videos\NG\Testing_4-4\Off-Axis_Images"
+    
+    """
+    Program code, do not edit.
+    """
+    for filename in os.listdir(direct):
+        filepath = direct + "\\" + filename
+        if not filepath.endswith(".Raw"):
+            continue
+        if os.path.isfile(filepath):
+            raw_imarray = np.fromfile(filepath, dtype='uint16')
+            reshaped_raw_imarray = np.reshape(raw_imarray, (int(1944/2 - 12),int(2592/2),2))
+            fits_file = filepath.split('.')[0]+'.fits'
+            
+            """
+            The following code segment is used to adjust the filenames of the output converted .fits files
+            - Can be removed/changed as needed for different naming schemes 
+            """
+            hypSplit = fits_file.split('-')
+            fits_file = hypSplit[0] + "-" + hypSplit[1] + "-" + hypSplit[2] + "-" + hypSplit[4]
+            if len(fits_file.split("On")) == 1:
+                direcSplt = fits_file.split("Images\\")
+                fits_file = direcSplt[0] + "Images\\" + "dark_" + direcSplt[1] 
+            else:
+                direcSplt = fits_file.split("Images\\")
+                fits_file = direcSplt[0] + "Images\\" + "bright_" + direcSplt[1] 
+            """
+            -- End of segment
+            """
 
             hdu = fits.ImageHDU(reshaped_raw_imarray)
             prim = fits.PrimaryHDU()
