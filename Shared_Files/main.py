@@ -39,7 +39,7 @@ def averageComparisons(directory,in1a,in1b,in2a,in2b,in3a,in3b,in4a,in4b):
     
     return names,avgs
 
-whichFile = 0
+whichFile = 3
 """
 whichFile's Choices and their Functionalities
 
@@ -183,7 +183,7 @@ elif whichFile == 3:
     csaAvgX = 0
     csaAvgY = 0
 
-    csaFilePath = csaPath + +"\\"
+    csaFilePath = csaPath + "\\"
     for filename in os.listdir(csaFilePath):
         if not filename.endswith('.fits'):
             continue
@@ -320,3 +320,5 @@ elif whichFile == 5:
     print("\nAll .raw images converted to .fits\n")
 else:
     print('Please choose a valid input,',whichFile,'is not a possible choice.')
+
+
