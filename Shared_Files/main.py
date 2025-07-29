@@ -49,6 +49,7 @@ whichFile's Choices and their Functionalities
 3: Centroid Stability Analysis & Animation
 4: Converts all .Raw files in a folder to .fits files for full frame images
 5: Converts all .Raw files in a folder to .fits files for 2x2 binned images
+99: Custom file viewing functionalities.
 """
 if whichFile == 0:
     """
@@ -318,6 +319,88 @@ elif whichFile == 5:
             hdul = fits.HDUList([prim,hdu])
             hdu.writeto(fits_file, overwrite=True)
     print("\nAll .raw images converted to .fits\n")
+elif whichFile == 99:
+    folderPath = r"C:\Users\antho\Videos\NG\PSF_Characterization\p_0-0"
+    fitsImgs = []
+    for filename in os.listdir(folderPath):
+        filepath = folderPath + '\\' + filename
+        if not filepath.endswith('.fits'):
+            continue
+        if os.path.isfile(filepath):
+            with fits.open(filepath) as hdul:
+                image = hdul[1].data
+                fitsImgs.append(image.astype(np.uint16))
+    
+    img = fitsImgs[0]
+    vLines = False
+    hLines = False
+    centCircle = False
+    topCircle = False
+    leftCircle = False
+    zoom = False
+    zoomMid = [972,1296]
+    zoomOffset = 200
+
+    if zoom == True:
+        plotTest = plt.imshow(img[zoomMid[0]-zoomOffset:zoomMid[0]+zoomOffset,zoomMid[1]-zoomOffset:zoomMid[1]+zoomOffset])
+        plotTest = plt.clim(np.min(img),np.max(img))
+        xVals = np.arange(zoomMid[0]-zoomOffset,zoomMid[0]+zoomOffset,50)
+        yVals = np.arange(zoomMid[1]-zoomOffset,zoomMid[1]+zoomOffset,50)
+        plotTest = plt.xticks(np.arange(0,zoomOffset*2,50),labels=xVals)
+        plotTest = plt.yticks(np.arange(0,zoomOffset*2,50),labels=yVals)
+    else:
+        plotTest = plt.imshow(img)
+
+    if centCircle == True:
+        t = np.linspace(0.0,2.0*np.pi,100)
+        x = ((2592/2)+200*np.cos(t))
+        y = ((1944/2)+200*np.sin(t))
+        plotTest = plt.plot(x,y,ls='dotted')
+
+    if topCircle == True:
+        t = np.linspace(0.0,2.0*np.pi,100)
+        x = ((2592/2)+200*np.cos(t))
+        y = ((1944)+200*np.sin(t))
+        plotTest = plt.plot(x,y,ls='dotted')
+
+    if leftCircle == True:
+        t = np.linspace(0.0,2.0*np.pi,100)
+        x = ((0)+200*np.cos(t))
+        y = ((1944/2)+200*np.sin(t))
+        plotTest = plt.plot(x,y,ls='dotted')
+
+    if vLines == True:
+        plt.axvline(1,color='yellow',label='p5-Pitch',lw=3)
+        plt.axvline(259,color='limegreen',label='p4-Pitch')
+        plt.axvline(518,color='teal',label='p3-Pitch')
+        plt.axvline(777,color='mediumslateblue',label='p2-Pitch')
+        plt.axvline(1036,color='indigo',label='p1-Pitch')
+        plt.axvline(1296,color='black',label='0-Pitch')
+        plt.axvline(1555,color='indigo',label='m1-Pitch')
+        plt.axvline(1814,color='mediumslateblue',label='m2-Pitch')
+        plt.axvline(2073,color='teal',label='m3-Pitch')
+        plt.axvline(2332,color='limegreen',label='m4-Pitch')
+        plt.axvline(2591,color='yellow',label='m5-Pitch',lw=3)
+        plt.legend()
+
+    if hLines == True:
+        plt.axhline(1,color='yellow',label='Yaw-p5',lw=3)
+        plt.axhline(194,color='limegreen',label='Yaw-p4')
+        plt.axhline(388,color='teal',label='Yaw-p3')
+        plt.axhline(583,color='mediumslateblue',label='Yaw-p2')
+        plt.axhline(777,color='indigo',label='Yaw-p1')
+        plt.axhline(972,color='black',label='Yaw-0')
+        plt.axhline(1166,color='indigo',label='Yaw-m1')
+        plt.axhline(1360,color='mediumslateblue',label='Yaw-m2')
+        plt.axhline(1555,color='teal',label='Yaw-m3')
+        plt.axhline(1749,color='limegreen',label='Yaw-m4')
+        plt.axhline(1943,color='yellow',label='Yaw-m5',lw=3)
+        plt.legend()
+
+    if zoom != True:
+        plotTest = plt.xlim(0,2592)
+        plotTest = plt.ylim(0,1944)
+    plt.show()
 else:
     print('Please choose a valid input,',whichFile,'is not a possible choice.')
 
